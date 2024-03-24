@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace DeliveryApp.Ui
 {
     public class Program
