@@ -2,6 +2,8 @@
 
 This template demonstrates a delivery service using Clean Architecture and DDD within a microservices framework. It focuses on modularity and efficient communication between services through ports and adapters.
 
+Based on the course:["Microarch. Microservice Architecture"](https://microarch.ru/courses/hexagonal-architecture)
+
 # Introduction
 What has been developed and is in the repository is an example of a delivery service (the other services have already been developed).
 
