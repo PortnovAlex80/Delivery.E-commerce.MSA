@@ -96,6 +96,20 @@ namespace DeliveryApp.Core.Domain.SharedKernel
             var result = new Location(Math.Abs(first.X - second.X),Math.Abs(first.Y - second.Y));
             return result;
         }
+
+        /// <summary>
+        /// Создать рандомную координату
+        /// </summary>
+        /// <returns>Результат</returns>
+        public static Result<Location, Error> CreateRandom()
+        {
+            var rnd = new Random();
+            var x  = rnd.Next(MinLocation.X, MaxLocation.X);
+            var y  = rnd.Next(MinLocation.X, MaxLocation.Y);
+            var location = new Location(x, y);
+            return location;
+        }
+
         
         /// <summary>
         /// Перегрузка для определения идентичности
