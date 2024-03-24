@@ -1,4 +1,5 @@
-# Delivery.E-commerce.MSA
+# Delivery service. E-commerce OMS.Microservices and DDD, Clean architecture.
+
 This template demonstrates a delivery service using Clean Architecture and DDD within a microservices framework. It focuses on modularity and efficient communication between services through ports and adapters.
 
 # Introduction
