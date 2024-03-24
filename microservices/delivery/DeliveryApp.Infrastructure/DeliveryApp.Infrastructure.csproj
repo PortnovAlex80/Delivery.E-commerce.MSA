@@ -23,6 +23,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Utils\Contracts.RabbitMq\Contracts.RabbitMq.csproj" />
+      <ProjectReference Include="..\DeliveryApp.Core\DeliveryApp.Core.csproj" />
+      
     </ItemGroup>
 
 </Project>
