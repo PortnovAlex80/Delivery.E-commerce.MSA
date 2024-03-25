@@ -10,7 +10,7 @@ namespace DeliveryApp.Infrastructure.EntityConfigurations.OrderAggregate
         {
             entityTypeBuilder.ToTable("orders");
         
-            entityTypeBuilder.Ignore(entity => entity.DomainEvents);
+            // entityTypeBuilder.Ignore(entity => entity.DomainEvents);
 
             entityTypeBuilder.HasKey(entity => entity.Id);
         

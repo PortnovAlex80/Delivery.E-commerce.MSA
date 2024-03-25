@@ -1,12 +1,14 @@
 ﻿﻿using System.Data;
+using BasketApp.Infrastructure.EntityConfigurations.Outbox;
 using DeliveryApp.Core.Domain.CourierAggregate;
 using DeliveryApp.Core.Domain.OrderAggregate;
+using DeliveryApp.Infrastructure.Entities;
 using DeliveryApp.Infrastructure.EntityConfigurations.CourierAggregate;
 using DeliveryApp.Infrastructure.EntityConfigurations.OrderAggregate;
-using DeliveryApp.Infrastructure.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Newtonsoft.Json;
 using Primitives;
 
 namespace DeliveryApp.Infrastructure
@@ -15,6 +17,8 @@ namespace DeliveryApp.Infrastructure
     {
         public DbSet<Order> Orders { get; set; }
         public DbSet<Courier> Couriers { get; set; }
+
+        public DbSet<OutboxMessage> OutboxMessages { get; set; }
         
         private readonly IMediator _mediator;
         
@@ -42,7 +46,9 @@ namespace DeliveryApp.Infrastructure
                 b.HasData(allStatuses.Select(c=>new { c.Id,c.Name }));
             });
             
-            
+            //Outbox
+            modelBuilder.ApplyConfiguration(new OutboxEntityTypeConfiguration());
+
             // Courier Aggregate
             modelBuilder.ApplyConfiguration(new CourierEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new CourierStatusEntityTypeConfiguration());
@@ -65,7 +71,7 @@ namespace DeliveryApp.Infrastructure
 
         public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)
         {
-            await _mediator.DispatchDomainEventsAsync(this);
+            await SaveDomainEventsInOutboxEventsAsync(this);
             await base.SaveChangesAsync(cancellationToken);
             return true;
         }
@@ -119,5 +125,36 @@ namespace DeliveryApp.Infrastructure
                 }
             }
         }
+
+        async Task SaveDomainEventsInOutboxEventsAsync(ApplicationDbContext dbContext)
+{
+        // Достаем доменные события из Aggregate и преобразовываем их к OutboxMessage
+        var outboxMessages = dbContext.ChangeTracker
+            .Entries<Aggregate>()
+            .Select(x => x.Entity)
+            .SelectMany(aggregate =>
+                {
+                    var domainEvents = aggregate.GetDomainEvents();
+                    aggregate.ClearDomainEvents();
+                    return domainEvents;
+                }
+            )
+            .Select(domainEvent => new OutboxMessage()
+            {
+                Id = domainEvent.Id,
+                OccuredOnUtc = DateTime.UtcNow,
+                Type = domainEvent.GetType().Name,
+                Content = JsonConvert.SerializeObject(
+                    domainEvent,
+                    new JsonSerializerSettings()
+                    {
+                        TypeNameHandling = TypeNameHandling.All
+                    })  
+            })
+            .ToList();
+
+        // Добавяляем OutboxMessage в dbContext, после выхода из метода они и сам Aggregate будут сохранены
+        await dbContext.Set<OutboxMessage>().AddRangeAsync(outboxMessages);
+}
     }
 }

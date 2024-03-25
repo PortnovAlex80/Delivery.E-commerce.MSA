@@ -10,7 +10,7 @@ namespace DeliveryApp.Infrastructure.EntityConfigurations.CourierAggregate
         {
             entityTypeBuilder.ToTable("couriers");
         
-            entityTypeBuilder.Ignore(entity => entity.DomainEvents);
+            // entityTypeBuilder.Ignore(entity => entity.DomainEvents);
 
             entityTypeBuilder.HasKey(entity => entity.Id);
         

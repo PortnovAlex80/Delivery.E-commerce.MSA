@@ -1,6 +1,6 @@
-﻿namespace Primitives;
+﻿﻿namespace Primitives;
 
-public interface IRepository<T> where T : IAggregateRoot
+public interface IRepository<T> where T : AggregateRoot
 {
     IUnitOfWork UnitOfWork { get; }
 }

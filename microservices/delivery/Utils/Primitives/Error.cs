@@ -32,6 +32,7 @@ public sealed class Error : ValueObject
     protected override IEnumerable<IComparable> GetEqualityComponents()
     {
         yield return Code;
+        yield return Message;
     }
 
     public string Serialize()
