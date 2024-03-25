@@ -181,6 +181,16 @@ namespace DeliveryApp.Ui
                 });
             });
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:8087")
+                            .AllowAnyMethod()
+                            .AllowAnyHeader();
+                    });
+            });
 
             services.AddHealthChecks();
         }
@@ -197,7 +207,7 @@ namespace DeliveryApp.Ui
             }
 
             
-
+            app.UseCors("AllowSpecificOrigin");
             app.UseHealthChecks("/health");
             app.UseRouting();
 
