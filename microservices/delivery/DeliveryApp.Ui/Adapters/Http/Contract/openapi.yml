@@ -1,0 +1,184 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Swagger Delivery
+  description: Отвечает за учет курьеров, деспетчеризацию доставкуов, доставку
+paths:
+  /api/v1/orders:
+    post:
+      summary: Создать заказ
+      description: Позволяет создать заказ
+      operationId: CreateOrder
+      responses:
+        '201':
+          description: Успешный ответ
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/orders/first/assign:
+    post:
+      summary: Назначить заказ
+      description: Позволяет назначить заказ
+      operationId: AssignOrder
+      responses:
+        '200':
+          description: Успешный ответ
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'                                 
+  /api/v1/orders/active:
+    get:
+      summary: Получить все актуальные заказы
+      description: Позволяет получить все актуальные заказы
+      operationId: GetActiveOrders
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/couriers/:
+    get:
+      summary: Получить всех курьеров
+      description: Позволяет получить всех курьеров
+      operationId: GetAllCouriers
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Courier'
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'                
+  /api/v1/couriers/{courierId}/start-work:
+    post:
+      summary: Начать работать
+      description: Позволяет курьеру начать работать
+      operationId: StartWork
+      parameters:
+        - name: courierId
+          in: path
+          description: Идентификатор курьера
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешный ответ
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'          
+  /api/v1/couriers/{courierId}/stop-work:
+    post:
+      summary: Закончить работать
+      description: Позволяет курьеру закончить работать
+      operationId: StopWork
+      parameters:
+        - name: courierId
+          in: path
+          description: Идентификатор курьера
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешный ответ
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/couriers/all/move:
+    post:
+      summary: Переместиться на 1 шаг всем курьерам
+      description: Позволяет курьерам переместиться на 1 шаг
+      operationId: Move
+      responses:
+        '200':
+          description: Успешный ответ
+        default:
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'                
+components:
+  schemas:
+    Location:
+      allOf:
+        - required:
+          - x
+          - y
+          properties:
+            x:
+              type: integer
+              description: X
+            y:
+              type: integer
+              description: Y
+    Order:
+      allOf:
+        - required:
+          - id
+          - location
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Идентификатор
+            location:
+               description: Геолокация
+               $ref: '#/components/schemas/Location'
+    Courier:
+      allOf:
+        - required:
+          - id
+          - location
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Идентификатор
+            location:
+               description: Геолокация
+               $ref: '#/components/schemas/Location'           
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: Код ошибки
+        message:
+          type: string
+          description: Текст ошибки
