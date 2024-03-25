@@ -8,18 +8,19 @@ namespace DeliveryApp.Core.Application.UseCases.Commands.CreateOrder
     public class Handler : IRequestHandler<Command, bool>
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly IGeoClient _geoClient;
 
-        public Handler(IOrderRepository orderRepository)
+        public Handler(IOrderRepository orderRepository, IGeoClient geoClient)
         {
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+             _geoClient = geoClient ?? throw new ArgumentNullException(nameof(geoClient));
         }
 
         public async Task<bool> Handle(Command message, CancellationToken cancellationToken)
         {
-            //Получаем геопозицию из Geo (пока ставим фэйковое значение)
-            var locationCreateRandomResult = Location.CreateRandom();
-            if (locationCreateRandomResult.IsFailure) return false; 
-            var location = locationCreateRandomResult.Value;
+            //Получаем геопозицию из Geo 
+            var location = await _geoClient.GetGeolocationAsync(message.Address,cancellationToken);
+            Console.WriteLine("Location - " + location);
             
             //Создаем вес
             var weightCreateResult = Weight.Create(message.Weight);

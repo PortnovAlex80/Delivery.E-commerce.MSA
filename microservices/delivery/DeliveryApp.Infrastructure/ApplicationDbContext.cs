@@ -1,8 +1,10 @@
-﻿using System.Data;
+﻿﻿using System.Data;
 using DeliveryApp.Core.Domain.CourierAggregate;
 using DeliveryApp.Core.Domain.OrderAggregate;
 using DeliveryApp.Infrastructure.EntityConfigurations.CourierAggregate;
 using DeliveryApp.Infrastructure.EntityConfigurations.OrderAggregate;
+using DeliveryApp.Infrastructure.Extensions;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Primitives;
@@ -14,9 +16,14 @@ namespace DeliveryApp.Infrastructure
         public DbSet<Order> Orders { get; set; }
         public DbSet<Courier> Couriers { get; set; }
         
+        private readonly IMediator _mediator;
+        
         private IDbContextTransaction _currentTransaction;
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMediator mediator) : base(options)
+        {
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        }
         
         public IDbContextTransaction GetCurrentTransaction() => _currentTransaction;
 
@@ -58,6 +65,7 @@ namespace DeliveryApp.Infrastructure
 
         public async Task<bool> SaveEntitiesAsync(CancellationToken cancellationToken = default)
         {
+            await _mediator.DispatchDomainEventsAsync(this);
             await base.SaveChangesAsync(cancellationToken);
             return true;
         }

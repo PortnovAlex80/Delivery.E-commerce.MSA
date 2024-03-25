@@ -46,6 +46,9 @@ namespace DeliveryApp.Core.Application.UseCases.Commands.MoveToOrder
                 // Сохраняем аггрегат
                 _courierRepository.Update(courier);
                 _orderRepository.Update(order);
+
+                Console.WriteLine("Use case Move to order" + courier.Id + " " + order.Id);
+
             }
             await _courierRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
             await _orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);

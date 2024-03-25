@@ -1,0 +1,61 @@
+POST http://localhost:8082/api/v1/couriers/bf79a004-56d7-4e5f-a21c-0a9e5e08d10d/start-work HTTP/1.1
+Content-Type: application/json
+
+###
+
+POST http://localhost:8082/api/v1/couriers/a9f7e4aa-becc-40ff-b691-f063c5d04015/start-work HTTP/1.1
+Content-Type: application/json
+
+###
+
+POST http://localhost:8082/api/v1/couriers/db18375d-59a7-49d1-bd96-a1738adcee93/start-work HTTP/1.1
+Content-Type: application/json
+
+###
+
+POST http://localhost:8082/api/v1/couriers/e7c84de4-3261-476a-9481-fb6be211de75/start-work HTTP/1.1
+Content-Type: application/json
+
+###
+POST http://localhost:8082/api/v1/couriers/18e5ba41-6710-4143-9808-704e88e94bd9/start-work HTTP/1.1
+Content-Type: application/json
+
+###
+curl http://localhost:8081/health
+curl http://localhost:8083/health
+curl http://localhost:8084/health
+curl http://localhost:8085/health
+
+
+
+###
+ Кладем товары в корзину
+curl --location 'http://localhost:8081/api/v1/baskets/57cacb15-be97-4879-bdd3-907ce31a8f9d/items/change' \
+--header 'Content-Type: application/json' \
+--data '{
+  "goodId": "292dc3c5-2bdd-4e0c-bd75-c5e8b07a8792",
+  "quantity": 6
+}'
+
+###
+ Указываем адрес доставки
+curl --location 'http://localhost:8081/api/v1/baskets/57cacb15-be97-4879-bdd3-907ce31a8f9d/address/add' \
+--header 'Content-Type: application/json' \
+--data '{
+  "country": "Россия",
+  "city": "Москва",
+  "street": "Аналитическая",
+  "house": "1",
+  "apartment": "2"
+}'
+
+###
+Указываем период доставки
+curl --location 'http://localhost:8081/api/v1/baskets/57cacb15-be97-4879-bdd3-907ce31a8f9d/delivery-period/add' \
+--header 'Content-Type: application/json' \
+--data '"Morning"'
+
+###
+Оформляем корзину
+curl --location --request POST 'http://localhost:8081/api/v1/baskets/57cacb15-be97-4879-bdd3-907ce31a8f9d/checkout' \
+--data ''

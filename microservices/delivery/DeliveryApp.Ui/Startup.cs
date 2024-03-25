@@ -13,6 +13,13 @@ using DeliveryApp.Infrastructure.Adapters.Postgres;
 
 using MassTransit;
 using MediatR;
+using DeliveryApp.Infrastructure.Adapters.Grpc.GeoService;
+using Quartz;
+using DeliveryApp.Ui.Adapters.BackgroundJobs;
+using DeliveryApp.Ui.Adapters.RabbitMq;
+using DeliveryApp.Core.Domain.OrderAggregate.DomainEvents;
+using DeliveryApp.Core.Application.DomainEventHandlers;
+using DeliveryApp.Infrastructure.Adapters.RabbitMq;
 
 namespace DeliveryApp.Ui
 {
@@ -25,6 +32,7 @@ namespace DeliveryApp.Ui
                 .AddEnvironmentVariables();
             var configuration = builder.Build();
             Configuration = configuration;
+
         }
 
         /// <summary>
@@ -40,6 +48,7 @@ namespace DeliveryApp.Ui
 
             var connectionString = Configuration["CONNECTION_STRING"];
             var rabbitMqHost = Configuration["RABBIT_MQ_HOST"];
+            var geoServiceGrpcHost = Configuration["GEO_SERVICE_GRPC_HOST"];
 
             // БД 
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -53,10 +62,41 @@ namespace DeliveryApp.Ui
                     options.EnableSensitiveDataLogging();                
                 }
             );
+
+            services.AddTransient(x => new Client(geoServiceGrpcHost));
+            // gRPC
+            services.AddGrpcClient<Client>(options => 
+            { 
+                options.Address = new Uri(geoServiceGrpcHost); 
+            });
+
+            // CRON Jobs
+            services.AddQuartz(configure =>
+            {
+                var assignOrdersJobKey = new JobKey(nameof(AssignOrdersJob));
+                var moveCouriersJobKey = new JobKey(nameof(MoveCouriersJob));
+                configure
+                    .AddJob<AssignOrdersJob>(assignOrdersJobKey)
+                    .AddTrigger(
+                        trigger => trigger.ForJob(assignOrdersJobKey)
+                            .WithSimpleSchedule(
+                                schedule => schedule.WithIntervalInSeconds(20)
+                                    .RepeatForever()))
+                    .AddJob<MoveCouriersJob>(moveCouriersJobKey)
+                    .AddTrigger(
+                        trigger => trigger.ForJob(moveCouriersJobKey)
+                            .WithSimpleSchedule(
+                                schedule => schedule.WithIntervalInSeconds(2)
+                                    .RepeatForever()));
+                configure.UseMicrosoftDependencyInjectionJobFactory();
+            });
+            services.AddQuartzHostedService();
         
             //Postgres
             services.AddTransient<ICourierRepository, CourierRepository>();
             services.AddTransient<IOrderRepository, OrderRepository>();
+            services.AddTransient<IGeoClient>(x => new Client(geoServiceGrpcHost));
+            services.AddTransient<IBusProducer,  RabbitMqBusProducer>();
 
             //MediatR
             // services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Startup>());
@@ -84,6 +124,11 @@ namespace DeliveryApp.Ui
             services.AddTransient<IRequestHandler<Core.Application.UseCases.Queries.GetAllCouriers.Query,
             Core.Application.UseCases.Queries.GetAllCouriers.Response>>(x 
                 => new Core.Application.UseCases.Queries.GetAllCouriers.Handler(connectionString));
+
+            // MediatR Domain Event Handlers
+            services.AddTransient<INotificationHandler<OrderCreatedDomainEvent>,OrderCreatedDomainEventHandler>();
+            services.AddTransient<INotificationHandler<OrderAssignedDomainEvent>,OrderAssignedDomainEventHandler>();
+            services.AddTransient<INotificationHandler<OrderCompletedDomainEvent>,OrderCompletedDomainEventHandler>();
 
 
             // HTTP Handlers
@@ -120,6 +165,22 @@ namespace DeliveryApp.Ui
                 options.OperationFilter<GeneratePathParamsValidationFilter>();
             });
             services.AddSwaggerGenNewtonsoftSupport();
+
+                        // Message Broker
+            services.AddMassTransit(x =>
+            {
+                //Consumers
+                x.AddConsumer<BasketConfirmedConsumer>();
+                x.UsingRabbitMq((context,cfg) =>
+                {
+                    cfg.Host(rabbitMqHost, "/", h => {
+                        h.Username("guest");
+                        h.Password("guest");
+                    });
+                    cfg.ConfigureEndpoints(context);
+                });
+            });
+
 
             services.AddHealthChecks();
         }
