@@ -14,11 +14,12 @@ We have developed an online store consisting of:
 3. Discount
 4. Geo
 5. Notification
+6. Front-end
 
 Additionally:
 
-6. Project with infrastructure dependencies (infrastructure).
-7. Service template (delivery-template).
+7. Project with infrastructure dependencies (infrastructure).
+8. Service template (delivery-template).
 
 # First step. Environment setup:
 
