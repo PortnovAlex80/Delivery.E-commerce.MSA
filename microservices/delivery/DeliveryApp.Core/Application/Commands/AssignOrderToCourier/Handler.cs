@@ -31,9 +31,6 @@ namespace DeliveryApp.Core.Application.UseCases.Commands.AssignOrderToCourier
             if (dispatchResult.IsFailure) return false;
             var courier = dispatchResult.Value;
 
-            // Сохраняем назначение одной транзакцией
-            // TODO вынести UnitOfWork из IRepository
-            //await using var transaction = await _orderRepository.UnitOfWork.BeginTransactionAsync();
             _courierRepository.Update(courier);
             _orderRepository.Update(order);
             await _orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
